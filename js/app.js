@@ -1526,7 +1526,42 @@ const App = {
         imported++;
       }
       
-      if (newTransactions.length > 0) {
+      if (this.currentPage === 'past_months' && newTransactions.length > 0) {
+        // Aggregate to one entry per month
+        const monthlySummaries = {};
+        newTransactions.forEach(t => {
+          const m = t.date.substring(0, 7); // e.g. "2026-09"
+          if (!monthlySummaries[m]) monthlySummaries[m] = { income: 0, expense: 0, date: t.date };
+          if (t.type === 'income') monthlySummaries[m].income += t.amount;
+          else monthlySummaries[m].expense += t.amount;
+          if (t.date > monthlySummaries[m].date) monthlySummaries[m].date = t.date;
+        });
+
+        const summarizedTransactions = [];
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        for (const [monthKey, data] of Object.entries(monthlySummaries)) {
+           const [yearStr, monthStr] = monthKey.split('-');
+           const monthLabel = monthNames[parseInt(monthStr)-1] + " " + yearStr;
+           
+           if (data.income > 0) {
+             summarizedTransactions.push({
+                type: 'income', name: `Archive Income - ${monthLabel}`, source: 'Archive', amount: data.income,
+                category: 'Miscellaneous', date: data.date, time: '23:59', timestamp: new Date(`${data.date}T23:59:00`).getTime(),
+                paymentMode: 'Bank Transfer', notes: 'Aggregated past statement data'
+             });
+           }
+           if (data.expense > 0) {
+             summarizedTransactions.push({
+                type: 'expense', name: `Archive Expenses - ${monthLabel}`, source: 'Archive', amount: data.expense,
+                category: 'Miscellaneous', date: data.date, time: '23:59', timestamp: new Date(`${data.date}T23:59:00`).getTime(),
+                paymentMode: 'Bank Transfer', notes: 'Aggregated past statement data'
+             });
+           }
+        }
+        
+        StorageManager.bulkAddTransactions(summarizedTransactions);
+        imported = summarizedTransactions.length;
+      } else if (newTransactions.length > 0) {
         StorageManager.bulkAddTransactions(newTransactions);
       }
 
