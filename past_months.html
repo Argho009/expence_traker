@@ -4,50 +4,130 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Past Months Archive - Campus Expense Tracker</title>
-  <meta name="description" content="Upload and manage past months' transaction statements.">
+  <meta name="description" content="Select a month to view and edit all transactions in bulk.">
 
-  <!-- FontAwesome & Styles -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/dashboard.css">
   <link rel="stylesheet" href="css/responsive.css">
 
   <style>
-    /* Custom styles for Archive Page */
+    /* ── Month Selector Card ── */
+    .month-selector-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .month-selector-card select {
+      min-width: 150px;
+    }
+    .save-all-btn {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 1.4rem;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.95rem;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+      color: white;
+      box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .save-all-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .save-all-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── Inline editable cells ── */
+    .inline-select, .inline-input {
+      width: 100%;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-main);
+      font-size: 0.875rem;
+      padding: 0.3rem 0.5rem;
+      border-radius: 6px;
+      transition: border 0.2s, background 0.2s;
+      font-family: inherit;
+    }
+    .inline-select:hover, .inline-input:hover,
+    .inline-select:focus, .inline-input:focus {
+      border-color: var(--primary-color);
+      background: var(--primary-light);
+      outline: none;
+    }
+    .inline-select { cursor: pointer; }
+    .inline-input::placeholder { color: var(--text-muted); font-style: italic; }
+
+    /* ── Empty state ── */
+    .archive-empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+    .archive-empty i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
+    .archive-empty p { margin: 0.25rem 0; }
+
+    /* ── Summary pills ── */
+    .month-summary-row {
+      display: flex;
+      gap: 1.5rem;
+      padding: 0.75rem 1.5rem;
+      background: var(--primary-light);
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      margin-bottom: 0.5rem;
+    }
+    .month-summary-row span { color: var(--text-muted); }
+    .month-summary-row strong { margin-left: 0.35rem; }
+
+    /* ── Dirty indicator ── */
+    tr.dirty td:first-child::after {
+      content: '●';
+      color: var(--primary-color);
+      font-size: 0.5rem;
+      vertical-align: super;
+      margin-left: 4px;
+    }
+
+    /* ── Table type badge same style ── */
+    .type-badge {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .type-badge.income { background: rgba(16,185,129,0.15); color: #10b981; }
+    .type-badge.expense { background: rgba(239,68,68,0.12); color: #ef4444; }
+    .amount-positive { color: #10b981; font-weight: 600; }
+    .amount-negative { color: #ef4444; font-weight: 600; }
   </style>
 </head>
 <body>
 
   <div class="app-layout">
-    <!-- Sidebar Navigation -->
+    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="logo-icon"><i class="fas fa-wallet"></i></div>
         <div class="logo-text">CampusTrack</div>
       </div>
-
       <ul class="nav-menu">
-        <li class="nav-item">
-          <a href="dashboard.html"><i class="fas fa-chart-line"></i> <span>Dashboard</span></a>
-        </li>
-        <li class="nav-item">
-          <a href="transactions.html"><i class="fas fa-exchange-alt"></i> <span>Transactions</span></a>
-        </li>
-        <li class="nav-item">
-          <a href="reports.html"><i class="fas fa-pie-chart"></i> <span>Reports & Analytics</span></a>
-        </li>
-        <li class="nav-item">
-          <a href="profile.html"><i class="fas fa-user-cog"></i> <span>Profile & Settings</span></a>
-        </li>
-        <li class="nav-item active">
-          <a href="past_months.html"><i class="fas fa-history"></i> <span>Past Months</span></a>
-        </li>
+        <li class="nav-item"><a href="dashboard.html"><i class="fas fa-chart-line"></i> <span>Dashboard</span></a></li>
+        <li class="nav-item"><a href="transactions.html"><i class="fas fa-exchange-alt"></i> <span>Transactions</span></a></li>
+        <li class="nav-item"><a href="reports.html"><i class="fas fa-pie-chart"></i> <span>Reports &amp; Analytics</span></a></li>
+        <li class="nav-item"><a href="profile.html"><i class="fas fa-user-cog"></i> <span>Profile &amp; Settings</span></a></li>
+        <li class="nav-item active"><a href="past_months.html"><i class="fas fa-history"></i> <span>Past Months</span></a></li>
       </ul>
-
       <div class="sidebar-footer">
         <button class="theme-toggle-btn">
-          <span>Dark Mode</span>
-          <i class="fas fa-moon"></i>
+          <span>Dark Mode</span><i class="fas fa-moon"></i>
         </button>
         <a href="#" class="nav-item logout-btn" style="color:var(--danger-color); padding:0.5rem 0.75rem; display:flex; align-items:center; gap:0.5rem; font-weight:600;">
           <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
@@ -55,18 +135,15 @@
       </div>
     </aside>
 
-    <!-- Main Workspace -->
+    <!-- Main -->
     <div class="main-wrapper">
       <header class="top-bar">
         <div style="display:flex; align-items:center; gap:1rem;">
           <button class="mobile-nav-toggle"><i class="fas fa-bars"></i></button>
-          <div class="page-title">
-            <h1>Past Months Archive</h1>
-          </div>
+          <div class="page-title"><h1>Past Months Archive</h1></div>
         </div>
-
         <div class="user-profile-summary">
-          <div class="live-clock-badge" id="live-header-clock" title="Current System Time">
+          <div class="live-clock-badge" id="live-header-clock">
             <i class="far fa-clock"></i>
             <span class="clock-date-part">-- --- ----</span>
             <span class="clock-sep">|</span>
@@ -82,248 +159,246 @@
 
       <main class="main-content">
 
+        <!-- ── Step 1: Month Picker + Import + Save All ── -->
+        <div class="glass-card" style="padding:1.25rem 1.5rem; margin-bottom:1.5rem;">
+          <div class="month-selector-card">
+            <i class="fas fa-calendar-alt" style="color:var(--primary-color); font-size:1.2rem;"></i>
+            <label style="font-weight:600; white-space:nowrap;">View Month:</label>
 
-        <!-- Transactions Archive Table -->
-        <div class="glass-card">
-          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-            <h2 style="font-size: 1.25rem; margin: 0;"><i class="fas fa-archive" style="color:var(--primary-color)"></i> Archive Records</h2>
-            <div class="filter-group" style="display: flex; align-items: center; gap: 0.75rem;">
-              
-              <button class="btn" style="background: var(--primary-color); color: white; padding: 0.4rem 0.8rem; display: flex; align-items: center; gap: 0.5rem;" onclick="document.getElementById('import-csv-file').click();">
-                <i class="fas fa-cloud-upload-alt"></i> Import
-              </button>
-              <input type="file" id="import-csv-file" accept=".csv,text/csv" style="display:none;" multiple>
+            <select id="archive-month-sel" class="form-select">
+              <option value="">— Select Month —</option>
+              <option value="01">January</option>
+              <option value="02">February</option>
+              <option value="03">March</option>
+              <option value="04">April</option>
+              <option value="05">May</option>
+              <option value="06">June</option>
+              <option value="07">July</option>
+              <option value="08">August</option>
+              <option value="09">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
 
-              <select id="filter-archive-month" class="form-select" style="width: 140px; padding: 0.4rem 0.8rem;">
-                <option value="all">All Months</option>
-                <option value="01">January</option>
-                <option value="02">February</option>
-                <option value="03">March</option>
-                <option value="04">April</option>
-                <option value="05">May</option>
-                <option value="06">June</option>
-                <option value="07">July</option>
-                <option value="08">August</option>
-                <option value="09">September</option>
-                <option value="10">October</option>
-                <option value="11">November</option>
-                <option value="12">December</option>
-              </select>
-              <select id="filter-archive-year" class="form-select" style="width: 100px; padding: 0.4rem 0.8rem;">
-                <option value="all">All Years</option>
-                <option value="2026">2026</option>
-                <option value="2025">2025</option>
-                <option value="2024">2024</option>
-                <option value="2023">2023</option>
-              </select>
-            </div>
+            <select id="archive-year-sel" class="form-select" style="max-width:110px;">
+              <option value="2026">2026</option>
+              <option value="2025">2025</option>
+              <option value="2024">2024</option>
+              <option value="2023">2023</option>
+            </select>
+
+            <button class="btn btn-secondary" style="display:flex;align-items:center;gap:0.5rem;" onclick="document.getElementById('import-csv-file').click();">
+              <i class="fas fa-cloud-upload-alt"></i> Import CSV
+            </button>
+            <input type="file" id="import-csv-file" accept=".csv,text/csv" style="display:none;" multiple>
+            <!-- required by app.js legacy hook -->
+            <button id="import-csv-btn" style="display:none;"></button>
+
+            <button class="save-all-btn" id="save-all-btn" disabled onclick="ArchivePage.saveAll()">
+              <i class="fas fa-save"></i> Save All Changes
+            </button>
           </div>
-          <div class="table-container" style="padding: 0 1.5rem 1.5rem 1.5rem;">
-            <table class="data-table">
+        </div>
+
+        <!-- ── Step 2: Inline Editable Table ── -->
+        <div class="glass-card" id="archive-table-card">
+          <div id="archive-summary-bar" style="display:none;" class="month-summary-row">
+            <div><span>Total Transactions:</span><strong id="arc-count">0</strong></div>
+            <div><span>Total Income:</span><strong id="arc-income" class="amount-positive">₹0</strong></div>
+            <div><span>Total Expenses:</span><strong id="arc-expense" class="amount-negative">₹0</strong></div>
+            <div><span>Net:</span><strong id="arc-net">₹0</strong></div>
+          </div>
+          <div class="table-container" style="padding:0 1.5rem 1.5rem;">
+            <table class="data-table" id="archive-table">
               <thead>
                 <tr>
                   <th>Type</th>
-                  <!-- #4 Sortable columns -->
-                  <th data-sort="name" onclick="App.sortBy('name')">
-                    Name / Source <i class="sort-icon fas fa-sort"></i>
-                  </th>
-                  <th data-sort="amount" onclick="App.sortBy('amount')">
-                    Amount <i class="sort-icon fas fa-sort"></i>
-                  </th>
-                  <th data-sort="category" onclick="App.sortBy('category')">
-                    Category <i class="sort-icon fas fa-sort"></i>
-                  </th>
-                  <th data-sort="date" onclick="App.sortBy('date')">
-                    Date &amp; Time <i class="sort-icon fas fa-sort active"></i>
-                  </th>
-                  <th>Payment Mode</th>
-                  <th>Notes</th>
-                  <th>Actions</th>
+                  <th>Name / Source</th>
+                  <th>Amount</th>
+                  <th style="min-width:160px;">Category <small style="color:var(--text-muted);font-weight:400;">(editable)</small></th>
+                  <th>Date &amp; Time</th>
+                  <th style="min-width:160px;">Notes <small style="color:var(--text-muted);font-weight:400;">(editable)</small></th>
                 </tr>
               </thead>
-              <tbody id="transactions-table-body">
-                <!-- Dynamically rendered by app.js -->
+              <tbody id="archive-tbody">
+                <tr>
+                  <td colspan="6">
+                    <div class="archive-empty">
+                      <i class="fas fa-calendar-alt" style="display:block;"></i>
+                      <p style="font-weight:600; font-size:1rem;">Select a month above to view transactions</p>
+                      <p style="font-size:0.875rem;">You can edit Category &amp; Notes directly in the table, then click Save All.</p>
+                    </div>
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
-
-          <div id="pagination-controls" class="pagination-wrapper">
-            <!-- Dynamically rendered pagination -->
-          </div>
-        </div>
-      </main>
-    </div>
-  </div>
-
-  <!-- #1 Edit Transaction Modal -->
-  <div id="edit-tx-modal" class="modal-backdrop">
-    <div class="modal-card" style="max-width: 560px;">
-      <div class="modal-header">
-        <h3><i class="fas fa-pencil-alt" style="color:var(--primary-color)"></i> Edit <span id="edit-tx-type-label">Transaction</span></h3>
-        <button id="close-edit-modal" class="modal-close"><i class="fas fa-times"></i></button>
-      </div>
-      <form id="edit-tx-form">
-        <input type="hidden" id="edit-tx-id">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
-          <div class="form-group">
-            <label class="form-label" for="edit-tx-type">Type *</label>
-            <select id="edit-tx-type" class="form-select" required>
-              <option value="expense">Expense</option>
-              <option value="income">Income</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="edit-tx-name">Name / Description *</label>
-            <input type="text" id="edit-tx-name" class="form-control" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="edit-tx-amount">Amount *</label>
-            <input type="number" id="edit-tx-amount" class="form-control" min="0.01" step="0.01" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="edit-tx-date">Date</label>
-            <input type="date" id="edit-tx-date" class="form-control">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="edit-tx-time">Time</label>
-            <input type="time" id="edit-tx-time" class="form-control">
-          </div>
-          <div class="form-group" id="edit-tx-category-group">
-            <label class="form-label" for="edit-tx-category">Category</label>
-            <select id="edit-tx-category" class="form-select">
-              <option value="">None</option>
-              <option value="Hostel">Hostel</option>
-              <option value="Mess/Food">Mess/Food</option>
-              <option value="Cafeteria">Cafeteria</option>
-              <option value="Stationery">Stationery</option>
-              <option value="Books">Books</option>
-              <option value="Transportation">Transportation</option>
-              <option value="Mobile Recharge">Mobile Recharge</option>
-              <option value="Internet">Internet</option>
-              <option value="Shopping">Shopping</option>
-              <option value="Entertainment">Entertainment</option>
-              <option value="Medical">Medical</option>
-              <option value="College Fees">College Fees</option>
-              <option value="Miscellaneous">Miscellaneous</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="edit-tx-payment">Payment Mode</label>
-            <select id="edit-tx-payment" class="form-select">
-              <option value="UPI">UPI</option>
-              <option value="Cash">Cash</option>
-              <option value="Debit Card">Debit Card</option>
-              <option value="Credit Card">Credit Card</option>
-              <option value="Net Banking">Net Banking</option>
-              <option value="Wallet">Wallet</option>
-            </select>
-          </div>
-          <div class="form-group" style="grid-column: 1 / -1;">
-            <label class="form-label" for="edit-tx-notes">Notes</label>
-            <input type="text" id="edit-tx-notes" class="form-control" placeholder="Optional note or tag">
-          </div>
-        </div>
-        <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
-          <button type="button" class="btn btn-secondary" onclick="document.getElementById('edit-tx-modal').classList.remove('active')">Cancel</button>
-          <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-        <div id="past-months-summary" style="margin-top: 2rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
-          <!-- Past months cards will be injected here -->
         </div>
 
       </main>
     </div>
   </div>
 
-  <!-- Core JS & Modules -->
   <script src="js/storage.js"></script>
   <script src="js/budget.js"></script>
   <script src="js/app.js"></script>
-  
+
   <script>
-    // Intercept file selection to show loading animation
-    document.getElementById('import-csv-file').addEventListener('change', function(e) {
-      if (e.target.files && e.target.files.length > 0) {
-        document.getElementById('upload-icon').className = 'fas fa-spinner fa-spin';
-        document.getElementById('upload-title').innerText = `Processing ${e.target.files.length} file(s)...`;
-        document.getElementById('upload-subtitle').innerText = 'Please wait while we import your transactions.';
+    const CATEGORIES = ["","Hostel","Mess/Food","Cafeteria","Stationery","Books","Transportation","Mobile Recharge","Internet","Shopping","Entertainment","Medical","College Fees","Miscellaneous"];
+
+    const ArchivePage = {
+      _pendingChanges: {}, // { txId: { category, notes } }
+
+      init() {
+        const monthSel = document.getElementById('archive-month-sel');
+        const yearSel  = document.getElementById('archive-year-sel');
+
+        // Default to current month/year
+        const now = new Date();
+        monthSel.value = String(now.getMonth() + 1).padStart(2, '0');
+        yearSel.value  = String(now.getFullYear());
+
+        monthSel.addEventListener('change', () => this.render());
+        yearSel.addEventListener('change',  () => this.render());
+
+        this.render();
+      },
+
+      getSelected() {
+        return {
+          month: document.getElementById('archive-month-sel').value,
+          year:  document.getElementById('archive-year-sel').value
+        };
+      },
+
+      render() {
+        const { month, year } = this.getSelected();
+        this._pendingChanges = {};
+        document.getElementById('save-all-btn').disabled = true;
+
+        const allTx = StorageManager.getTransactions();
+        const filtered = allTx.filter(t => {
+          if (!t.date) return false;
+          const [y, m] = t.date.split('-');
+          return m === month && y === year;
+        });
+
+        // Sort ascending by date then time
+        filtered.sort((a, b) => {
+          const da = (a.date || '') + (a.time || '');
+          const db = (b.date || '') + (b.time || '');
+          return da.localeCompare(db);
+        });
+
+        const tbody = document.getElementById('archive-tbody');
+        const summaryBar = document.getElementById('archive-summary-bar');
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6">
+            <div class="archive-empty">
+              <i class="fas fa-inbox" style="display:block;"></i>
+              <p style="font-weight:600;">No transactions found for this month</p>
+              <p style="font-size:0.875rem;">Try importing a CSV or select a different month.</p>
+            </div></td></tr>`;
+          summaryBar.style.display = 'none';
+          return;
+        }
+
+        // Summary
+        let totalIncome = 0, totalExpense = 0;
+        filtered.forEach(t => {
+          const amt = parseFloat(t.amount) || 0;
+          if (t.type === 'income') totalIncome += amt;
+          else totalExpense += amt;
+        });
+        const net = totalIncome - totalExpense;
+        document.getElementById('arc-count').textContent = filtered.length;
+        document.getElementById('arc-income').textContent = '₹' + totalIncome.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+        document.getElementById('arc-expense').textContent = '₹' + totalExpense.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+        const netEl = document.getElementById('arc-net');
+        netEl.textContent = (net >= 0 ? '+' : '') + '₹' + net.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+        netEl.className = net >= 0 ? 'amount-positive' : 'amount-negative';
+        summaryBar.style.display = 'flex';
+
+        // Rows
+        tbody.innerHTML = filtered.map(t => {
+          const amt = parseFloat(t.amount) || 0;
+          const amtDisplay = t.type === 'income'
+            ? `<span class="amount-positive">+₹${amt.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>`
+            : `<span class="amount-negative">-₹${amt.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>`;
+
+          // Date formatting: DD/MM/YYYY, HH:MM AM/PM
+          let dateDisplay = t.date || '';
+          if (dateDisplay) {
+            const [y, m, d] = dateDisplay.split('-');
+            dateDisplay = `${d}/${m}/${y}`;
+          }
+          let timeDisplay = '';
+          if (t.time) {
+            const [hh, mm] = t.time.split(':');
+            const h = parseInt(hh), suffix = h >= 12 ? 'PM' : 'AM';
+            timeDisplay = `${String(h % 12 || 12).padStart(2,'0')}:${mm} ${suffix}`;
+          }
+
+          // Category dropdown
+          const catOptions = CATEGORIES.map(c =>
+            `<option value="${c}" ${(t.category||'') === c ? 'selected' : ''}>${c || '— None —'}</option>`
+          ).join('');
+
+          return `<tr data-id="${t.id}">
+            <td><span class="type-badge ${t.type}">${t.type}</span></td>
+            <td style="max-width:220px; word-break:break-word;">${t.name || t.source || '—'}</td>
+            <td>${amtDisplay}</td>
+            <td>
+              <select class="inline-select" data-field="category" data-id="${t.id}" onchange="ArchivePage.markChange('${t.id}','category',this.value)">
+                ${catOptions}
+              </select>
+            </td>
+            <td style="white-space:nowrap;">${dateDisplay}${timeDisplay ? '<br><small style="color:var(--text-muted);">' + timeDisplay + '</small>' : ''}</td>
+            <td>
+              <input class="inline-input" type="text" placeholder="Add a note…" value="${(t.notes||'').replace(/"/g,'&quot;')}" data-field="notes" data-id="${t.id}" oninput="ArchivePage.markChange('${t.id}','notes',this.value)">
+            </td>
+          </tr>`;
+        }).join('');
+      },
+
+      markChange(id, field, value) {
+        if (!this._pendingChanges[id]) this._pendingChanges[id] = {};
+        this._pendingChanges[id][field] = value;
+        // Mark row dirty visually
+        const row = document.querySelector(`tr[data-id="${id}"]`);
+        if (row) row.classList.add('dirty');
+        document.getElementById('save-all-btn').disabled = false;
+      },
+
+      saveAll() {
+        const ids = Object.keys(this._pendingChanges);
+        if (ids.length === 0) return;
+
+        ids.forEach(id => {
+          const changes = this._pendingChanges[id];
+          StorageManager.updateTransaction(id, changes);
+          // Remove dirty style
+          const row = document.querySelector(`tr[data-id="${id}"]`);
+          if (row) row.classList.remove('dirty');
+        });
+
+        this._pendingChanges = {};
+        document.getElementById('save-all-btn').disabled = true;
+
+        // Show success toast
+        if (App && App.showToast) App.showToast(`Saved ${ids.length} change${ids.length > 1 ? 's' : ''} successfully!`, 'success');
       }
-    });
-
-    // Reset upload UI
-    function resetUploadUI() {
-      document.getElementById('upload-icon').className = 'fas fa-file-csv';
-      document.getElementById('upload-title').innerText = 'Select Multiple CSV Files';
-      document.getElementById('upload-subtitle').innerHTML = 'Click here or drag & drop past month statement CSVs.<br/>You can select multiple files at once.';
-    }
-
-    // Called automatically by app.js when CSV import finishes
-    window.updateUI = function() {
-      resetUploadUI();
-      renderPastMonthsSummary();
     };
 
-    function renderPastMonthsSummary() {
-      const summaryContainer = document.getElementById('past-months-summary');
-      const transactions = StorageManager.getTransactions();
-      
-      if (transactions.length === 0) {
-        summaryContainer.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 2rem;">No past transactions found.</div>';
-        return;
-      }
+    // Called by app.js after CSV import finishes
+    window.updateUI = function() {
+      ArchivePage.render();
+    };
 
-      // Group by Month-Year (e.g., "September 2026")
-      const grouped = {};
-      transactions.forEach(tx => {
-        const dateObj = new Date(tx.date);
-        const monthYear = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
-        
-        if (!grouped[monthYear]) {
-          grouped[monthYear] = { income: 0, expense: 0, count: 0, dateValue: dateObj.getTime() };
-        }
-        
-        if (tx.type === 'income') {
-          grouped[monthYear].income += parseFloat(tx.amount);
-        } else if (tx.type === 'expense') {
-          grouped[monthYear].expense += parseFloat(tx.amount);
-        }
-        grouped[monthYear].count += 1;
-      });
-
-      // Sort by descending date
-      const sortedMonths = Object.keys(grouped).sort((a, b) => grouped[b].dateValue - grouped[a].dateValue);
-
-      let html = '';
-      sortedMonths.forEach(month => {
-        const data = grouped[month];
-        html += `
-          <div class="glass-card" style="padding: 1.5rem;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-              <h3 style="margin:0; font-size:1.2rem;">${month}</h3>
-              <span class="badge" style="background:var(--primary-color); color:white; font-size:0.8rem;">${data.count} txns</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom: 0.5rem;">
-              <span style="color:var(--text-muted);">Income:</span>
-              <strong style="color:var(--success-color);">₹${data.income.toLocaleString()}</strong>
-            </div>
-            <div style="display:flex; justify-content:space-between;">
-              <span style="color:var(--text-muted);">Expense:</span>
-              <strong style="color:var(--danger-color);">₹${data.expense.toLocaleString()}</strong>
-            </div>
-          </div>
-        `;
-      });
-      
-      summaryContainer.innerHTML = html;
-    }
-
-    // Initial render
     document.addEventListener('DOMContentLoaded', () => {
-      renderPastMonthsSummary();
+      ArchivePage.init();
     });
   </script>
 </body>
