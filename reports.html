@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports & Analytics - Campus Expense Tracker</title>
+  <meta name="description" content="Visual analytics, category breakdown charts, and PDF/CSV financial report downloads.">
+
+  <!-- FontAwesome & Styles -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <!-- Chart.js and jsPDF CDNs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-icon"><i class="fas fa-wallet"></i></div>
+        <div class="logo-text">CampusTrack</div>
+      </div>
+
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="dashboard.html"><i class="fas fa-chart-line"></i> <span>Dashboard</span></a>
+        </li>
+        <li class="nav-item">
+          <a href="transactions.html"><i class="fas fa-exchange-alt"></i> <span>Transactions</span></a>
+        </li>
+        <li class="nav-item active">
+          <a href="reports.html"><i class="fas fa-pie-chart"></i> <span>Reports & Analytics</span></a>
+        </li>
+        <li class="nav-item">
+          <a href="profile.html"><i class="fas fa-user-cog"></i> <span>Profile & Settings</span></a>
+        </li>
+        <li class="nav-item">
+          <a href="past_months.html"><i class="fas fa-history"></i> <span>Past Months</span></a>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <button class="theme-toggle-btn">
+          <span>Dark Mode</span>
+          <i class="fas fa-moon"></i>
+        </button>
+        <a href="#" class="nav-item logout-btn" style="color:var(--danger-color); padding:0.5rem 0.75rem; display:flex; align-items:center; gap:0.5rem; font-weight:600;">
+          <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <div class="main-wrapper">
+      <header class="top-bar">
+        <div style="display:flex; align-items:center; gap:1rem;">
+          <button class="mobile-nav-toggle"><i class="fas fa-bars"></i></button>
+          <div class="page-title">
+            <h1>Reports & Expense Analytics</h1>
+          </div>
+        </div>
+
+        <div class="user-profile-summary">
+          <div class="live-clock-badge" id="live-header-clock" title="Current System Time">
+            <i class="far fa-clock"></i>
+            <span class="clock-date-part">-- --- ----</span>
+            <span class="clock-sep">|</span>
+            <span class="clock-time-part">--:-- --</span>
+          </div>
+          <div class="user-info">
+            <span class="user-name" id="header-user-name">Student User</span>
+            <span class="user-role">Campus Student</span>
+          </div>
+          <div class="user-avatar" id="header-user-avatar">S</div>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <!-- Analytics Header & Download Actions -->
+        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:2rem;">
+          <div>
+            <h2 style="font-size:1.4rem;">Financial Overview & Insights</h2>
+            <p style="color:var(--text-muted); font-size:0.9rem;">Analyze spending distribution, category rankings, and export official reports.</p>
+          </div>
+
+          <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+            <button id="export-pdf-btn" class="btn btn-primary">
+              <i class="fas fa-file-pdf"></i> Download PDF
+            </button>
+            <button id="export-csv-btn" class="btn btn-secondary">
+              <i class="fas fa-file-csv"></i> Export CSV
+            </button>
+            <button id="print-report-btn" class="btn btn-secondary">
+              <i class="fas fa-print"></i> Print
+            </button>
+          </div>
+        </div>
+
+        <!-- Key Analytics Metrics Cards -->
+        <div class="analytics-metrics-grid">
+          <div class="glass-card analytics-card">
+            <div class="analytics-card-icon"><i class="fas fa-crown"></i></div>
+            <div class="analytics-card-info">
+              <span class="analytics-card-title">Top Category</span>
+              <div class="analytics-card-value" id="analytic-most-expensive">Loading...</div>
+            </div>
+          </div>
+
+          <div class="glass-card analytics-card">
+            <div class="analytics-card-icon" style="background:rgba(239, 68, 68, 0.1); color:var(--danger-color);">
+              <i class="fas fa-utensils"></i>
+            </div>
+            <div class="analytics-card-info">
+              <span class="analytics-card-title">Food & Mess Spend</span>
+              <div class="analytics-card-value" id="analytic-food-total">₹0</div>
+            </div>
+          </div>
+
+          <div class="glass-card analytics-card">
+            <div class="analytics-card-icon" style="background:rgba(59, 130, 246, 0.1); color:var(--info-color);">
+              <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="analytics-card-info">
+              <span class="analytics-card-title">Monthly Spending</span>
+              <div class="analytics-card-value" id="analytic-monthly-spending">₹0</div>
+            </div>
+          </div>
+
+          <div class="glass-card analytics-card">
+            <div class="analytics-card-icon" style="background:rgba(245, 158, 11, 0.1); color:var(--warning-color);">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="analytics-card-info">
+              <span class="analytics-card-title">Daily Avg Spending</span>
+              <div class="analytics-card-value" id="analytic-daily-avg">₹0/day</div>
+            </div>
+          </div>
+
+          <div class="glass-card analytics-card">
+            <div class="analytics-card-icon" style="background:rgba(16, 185, 129, 0.1); color:var(--success-color);">
+              <i class="fas fa-balance-scale"></i>
+            </div>
+            <div class="analytics-card-info">
+              <span class="analytics-card-title">Income / Expense Ratio</span>
+              <div class="analytics-card-value" id="analytic-ratio">1.0x</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category Doughnut Chart -->
+        <div class="glass-card" style="padding: 2rem;">
+          <div class="card-header">
+            <h2><i class="fas fa-chart-pie" style="color:var(--primary-color)"></i> Expense Distribution by Category</h2>
+            <span class="badge badge-income" style="font-size:0.8rem;">Interactive Chart</span>
+          </div>
+
+          <div id="category-chart-wrapper" style="position: relative; height: 380px; width: 100%; display:flex; justify-content:center; align-items:center;">
+            <canvas id="category-chart-canvas"></canvas>
+          </div>
+        </div>
+
+        <!-- #6 Monthly Trend Bar Chart -->
+        <div class="glass-card" style="padding: 2rem; margin-top: 1.5rem;">
+          <div class="card-header">
+            <h2><i class="fas fa-chart-bar" style="color:var(--primary-color)"></i> 6-Month Income vs Expense Trend</h2>
+            <span class="badge badge-expense" style="font-size:0.8rem;">Last 6 Months</span>
+          </div>
+          <div style="position: relative; height: 300px; width: 100%;">
+            <canvas id="trend-chart-canvas"></canvas>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Core JS & Modules -->
+  <script src="js/storage.js"></script>
+  <script src="js/budget.js"></script>
+  <script src="js/chart.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

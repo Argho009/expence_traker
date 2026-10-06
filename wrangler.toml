@@ -1,0 +1,12 @@
+name = "money"
+compatibility_date = "2024-03-20"
+pages_build_output_dir = "."
+
+[[d1_databases]]
+binding = "DB"
+database_name = "money-db"
+database_id = "59ae7312-7c40-493c-9766-2991a4632341"
+
+#[r2_buckets]
+#binding
+#bucket_name

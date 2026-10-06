@@ -1,0 +1,31 @@
+export async function onRequestPost(context) {
+  const { request, env } = context;
+  
+  try {
+    const formData = await request.formData();
+    const file = formData.get('receipt');
+    const userId = formData.get('userId');
+    
+    if (!file || !userId) {
+      return new Response(JSON.stringify({ error: "Missing file or userId" }), { status: 400 });
+    }
+
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    
+    const fileExtension = file.name.split('.').pop() || 'jpg';
+    const uniqueId = "img_" + Date.now().toString(36) + Math.random().toString(36).substr(2, 4);
+    
+    // Organized in monthly folders: phonepe/YYYY/MM/filename
+    const key = `phonepe/${year}/${month}/${uniqueId}.${fileExtension}`;
+    
+    await env.RECEIPTS_BUCKET.put(key, file.stream(), {
+      httpMetadata: { contentType: file.type }
+    });
+    
+    return new Response(JSON.stringify({ success: true, url: `/api/receipts/${key}` }), { status: 200 });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+  }
+}

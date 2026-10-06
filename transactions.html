@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transactions - Campus Expense Tracker</title>
+  <meta name="description" content="Add income, record expenses, filter and search transaction history.">
+
+  <!-- FontAwesome Icons & Styles -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <!-- OCR Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  
+  <style>
+    .form-tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 1.5rem;
+    }
+    .form-tab-btn {
+      padding: 0.75rem 1.25rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all var(--transition-fast);
+    }
+    .form-tab-btn.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+    }
+    /* #4 Sort indicators */
+    th[data-sort] { cursor: pointer; user-select: none; white-space: nowrap; }
+    th[data-sort]:hover { color: var(--primary-color); }
+    .sort-icon { margin-left: 4px; font-size: 0.75rem; opacity: 0.4; }
+    .sort-icon.active { opacity: 1; color: var(--primary-color); }
+    /* Date range filter row */
+    .date-range-filter {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .date-range-filter label { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+    .date-range-filter input { width: 140px; font-size: 0.85rem; padding: 0.5rem 0.75rem; }
+    /* Keyboard shortcuts hint */
+    .kb-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+    .kb-hint kbd {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 6px;
+      border: 1px solid var(--card-border);
+      border-radius: 4px;
+      font-size: 0.72rem;
+      background: var(--bg-color);
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-icon"><i class="fas fa-wallet"></i></div>
+        <div class="logo-text">CampusTrack</div>
+      </div>
+
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="dashboard.html"><i class="fas fa-chart-line"></i> <span>Dashboard</span></a>
+        </li>
+        <li class="nav-item active">
+          <a href="transactions.html"><i class="fas fa-exchange-alt"></i> <span>Transactions</span></a>
+        </li>
+        <li class="nav-item">
+          <a href="reports.html"><i class="fas fa-pie-chart"></i> <span>Reports & Analytics</span></a>
+        </li>
+        <li class="nav-item">
+          <a href="profile.html"><i class="fas fa-user-cog"></i> <span>Profile & Settings</span></a>
+        </li>
+        <li class="nav-item">
+          <a href="past_months.html"><i class="fas fa-history"></i> <span>Past Months</span></a>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <button class="theme-toggle-btn">
+          <span>Dark Mode</span>
+          <i class="fas fa-moon"></i>
+        </button>
+        <a href="#" class="nav-item logout-btn" style="color:var(--danger-color); padding:0.5rem 0.75rem; display:flex; align-items:center; gap:0.5rem; font-weight:600;">
+          <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <div class="main-wrapper">
+      <header class="top-bar">
+        <div style="display:flex; align-items:center; gap:1rem;">
+          <button class="mobile-nav-toggle"><i class="fas fa-bars"></i></button>
+          <div class="page-title">
+            <h1>Transactions &amp; Log</h1>
+          </div>
+        </div>
+
+        <div class="user-profile-summary">
+          <div class="live-clock-badge" id="live-header-clock" title="Current System Time">
+            <i class="far fa-clock"></i>
+            <span class="clock-date-part">-- --- ----</span>
+            <span class="clock-sep">|</span>
+            <span class="clock-time-part">--:-- --</span>
+          </div>
+          <div class="user-info">
+            <span class="user-name" id="header-user-name">Student User</span>
+            <span class="user-role">Campus Student</span>
+          </div>
+          <div class="user-avatar" id="header-user-avatar">S</div>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <!-- Keyboard shortcuts hint -->
+        <div class="kb-hint" style="margin-bottom:1rem;">
+          <span><kbd>E</kbd> Add Expense</span>
+          <span><kbd>I</kbd> Add Income</span>
+          <span><kbd>/</kbd> Focus Search</span>
+        </div>
+
+        <!-- Add Transaction Card with Tabs -->
+        <div class="glass-card" style="padding: 1.75rem; margin-bottom: 2rem;">
+          <div class="form-tabs" style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; gap:0.5rem;">
+              <button id="tab-add-expense" class="form-tab-btn active"><i class="fas fa-minus-circle"></i> Add Expense</button>
+              <button id="tab-add-income" class="form-tab-btn"><i class="fas fa-plus-circle"></i> Add Income</button>
+            </div>
+            <div>
+              <input type="file" id="ocr-upload" accept="image/*,application/pdf,.csv,text/csv" style="display:none;" multiple />
+              <button type="button" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.5rem 1rem; border: 1px dashed var(--primary-color); color: var(--primary-color);" onclick="document.getElementById('ocr-upload').click();">
+                <i class="fas fa-camera"></i> Scan Screenshot / Upload CSV
+              </button>
+            </div>
+          </div>
+
+          <!-- Add Expense Form -->
+          <form id="form-add-expense">
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem;">
+              <div class="form-group">
+                <label class="form-label" for="expense-name">Expense Description *</label>
+                <input type="text" id="expense-name" class="form-control" placeholder="e.g. Mess Food, Hostel Rent, Books" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="expense-amount">Amount (₹) *</label>
+                <input type="number" id="expense-amount" class="form-control" placeholder="0.00" min="1" step="0.01" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="expense-category">Category *</label>
+                <select id="expense-category" class="form-select" required>
+                  <option value="" disabled selected>Select Category</option>
+                  <option value="Hostel">Hostel</option>
+                  <option value="Mess/Food">Mess/Food</option>
+                  <option value="Cafeteria">Cafeteria</option>
+                  <option value="Stationery">Stationery</option>
+                  <option value="Books">Books</option>
+                  <option value="Transportation">Transportation</option>
+                  <option value="Mobile Recharge">Mobile Recharge</option>
+                  <option value="Internet">Internet</option>
+                  <option value="Shopping">Shopping</option>
+                  <option value="Entertainment">Entertainment</option>
+                  <option value="Medical">Medical</option>
+                  <option value="College Fees">College Fees</option>
+                  <option value="Miscellaneous">Miscellaneous</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="expense-date">Date *</label>
+                <input type="date" id="expense-date" class="form-control" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="expense-payment-mode">Payment Mode</label>
+                <select id="expense-payment-mode" class="form-select">
+                  <option value="UPI">UPI (Google Pay/PhonePe)</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Debit Card">Debit Card</option>
+                  <option value="Credit Card">Credit Card</option>
+                  <option value="Net Banking">Net Banking</option>
+                  <option value="Wallet">Wallet</option>
+                </select>
+              </div>
+
+              <!-- #2 Notes Field -->
+              <div class="form-group">
+                <label class="form-label" for="expense-notes">Notes (optional)</label>
+                <input type="text" id="expense-notes" class="form-control" placeholder="e.g. Bought Physics textbook">
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; margin-top:1rem;">
+              <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Save Expense</button>
+            </div>
+          </form>
+
+          <!-- Add Income Form (Hidden by default) -->
+          <form id="form-add-income" style="display: none;">
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem;">
+              <div class="form-group">
+                <label class="form-label" for="income-amount">Income Amount (₹) *</label>
+                <input type="number" id="income-amount" class="form-control" placeholder="0.00" min="1" step="0.01" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="income-source">Income Source *</label>
+                <select id="income-source" class="form-select" required>
+                  <option value="Pocket Money">Pocket Money / Parents</option>
+                  <option value="Scholarship">Scholarship</option>
+                  <option value="Part-time Job">Part-time Job</option>
+                  <option value="Parents">Parents</option>
+                  <option value="Freelancing">Freelancing</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="income-date">Date *</label>
+                <input type="date" id="income-date" class="form-control" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="income-payment-mode">Received Via (Payment Mode)</label>
+                <select id="income-payment-mode" class="form-select">
+                  <option value="UPI">UPI (Google Pay / PhonePe)</option>
+                  <option value="Cash">Cash in Hand</option>
+                  <option value="Net Banking">Net Banking / Bank Transfer</option>
+                </select>
+              </div>
+
+              <!-- #2 Notes Field -->
+              <div class="form-group">
+                <label class="form-label" for="income-notes">Notes (optional)</label>
+                <input type="text" id="income-notes" class="form-control" placeholder="e.g. Monthly allowance from parents">
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; margin-top:1rem;">
+              <button type="submit" class="btn btn-success"><i class="fas fa-plus"></i> Save Income</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="glass-card filter-toolbar" style="flex-direction:column; gap:1rem; align-items:flex-start;">
+          <div class="filter-group" style="width:100%;">
+            <div class="search-input-box">
+              <i class="fas fa-search"></i>
+              <input type="text" id="search-query" class="form-control" placeholder="Search by name, category or notes...">
+            </div>
+
+            <select id="filter-time-range" class="form-select" style="width: auto;">
+              <option value="all">Time: All Time</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+
+            <select id="filter-type" class="form-select" style="width: auto;">
+              <option value="all">Type: All</option>
+              <option value="income">Income Only</option>
+              <option value="expense">Expense Only</option>
+            </select>
+
+            <select id="filter-category" class="form-select" style="width: auto;">
+              <option value="all">Category: All</option>
+              <option value="Hostel">Hostel</option>
+              <option value="Mess/Food">Mess/Food</option>
+              <option value="Cafeteria">Cafeteria</option>
+              <option value="Stationery">Stationery</option>
+              <option value="Books">Books</option>
+              <option value="Transportation">Transportation</option>
+              <option value="Mobile Recharge">Mobile Recharge</option>
+              <option value="Internet">Internet</option>
+              <option value="Shopping">Shopping</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Medical">Medical</option>
+            </select>
+
+            <select id="filter-payment" class="form-select" style="width: auto;">
+              <option value="all">Payment Mode: All</option>
+              <option value="UPI">UPI</option>
+              <option value="Cash">Cash</option>
+              <option value="Debit Card">Debit Card</option>
+              <option value="Net Banking">Net Banking</option>
+            </select>
+
+            <button id="clear-filters-btn" class="btn btn-secondary" style="padding:0.6rem 1rem;">
+              <i class="fas fa-undo"></i> Reset
+            </button>
+          </div>
+
+          <!-- #3 Date Range Filter -->
+          <div class="date-range-filter">
+            <label><i class="fas fa-calendar"></i> From:</label>
+            <input type="date" id="filter-date-from" class="form-control">
+            <label>To:</label>
+            <input type="date" id="filter-date-to" class="form-control">
+          </div>
+        </div>
+
+        <!-- Transactions History Table -->
+        <div class="glass-card" style="padding: 1.5rem;">
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <!-- #4 Sortable columns -->
+                  <th data-sort="name" onclick="App.sortBy('name')">
+                    Name / Source <i class="sort-icon fas fa-sort"></i>
+                  </th>
+                  <th data-sort="amount" onclick="App.sortBy('amount')">
+                    Amount <i class="sort-icon fas fa-sort"></i>
+                  </th>
+                  <th data-sort="category" onclick="App.sortBy('category')">
+                    Category <i class="sort-icon fas fa-sort"></i>
+                  </th>
+                  <th data-sort="date" onclick="App.sortBy('date')">
+                    Date &amp; Time <i class="sort-icon fas fa-sort active"></i>
+                  </th>
+                  <th>Payment Mode</th>
+                  <th>Notes</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="transactions-table-body">
+                <!-- Dynamically rendered by app.js -->
+              </tbody>
+            </table>
+          </div>
+
+          <div id="pagination-controls" class="pagination-wrapper">
+            <!-- Dynamically rendered pagination -->
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- #1 Edit Transaction Modal -->
+  <div id="edit-tx-modal" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 560px;">
+      <div class="modal-header">
+        <h3><i class="fas fa-pencil-alt" style="color:var(--primary-color)"></i> Edit <span id="edit-tx-type-label">Transaction</span></h3>
+        <button id="close-edit-modal" class="modal-close"><i class="fas fa-times"></i></button>
+      </div>
+      <form id="edit-tx-form">
+        <input type="hidden" id="edit-tx-id">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+          <div class="form-group">
+            <label class="form-label" for="edit-tx-type">Type *</label>
+            <select id="edit-tx-type" class="form-select" required>
+              <option value="expense">Expense</option>
+              <option value="income">Income</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit-tx-name">Name / Description *</label>
+            <input type="text" id="edit-tx-name" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit-tx-amount">Amount *</label>
+            <input type="number" id="edit-tx-amount" class="form-control" min="0.01" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit-tx-date">Date</label>
+            <input type="date" id="edit-tx-date" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit-tx-time">Time</label>
+            <input type="time" id="edit-tx-time" class="form-control">
+          </div>
+          <div class="form-group" id="edit-tx-category-group">
+            <label class="form-label" for="edit-tx-category">Category</label>
+            <select id="edit-tx-category" class="form-select">
+              <option value="">None</option>
+              <option value="Hostel">Hostel</option>
+              <option value="Mess/Food">Mess/Food</option>
+              <option value="Cafeteria">Cafeteria</option>
+              <option value="Stationery">Stationery</option>
+              <option value="Books">Books</option>
+              <option value="Transportation">Transportation</option>
+              <option value="Mobile Recharge">Mobile Recharge</option>
+              <option value="Internet">Internet</option>
+              <option value="Shopping">Shopping</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Medical">Medical</option>
+              <option value="College Fees">College Fees</option>
+              <option value="Miscellaneous">Miscellaneous</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit-tx-payment">Payment Mode</label>
+            <select id="edit-tx-payment" class="form-select">
+              <option value="UPI">UPI</option>
+              <option value="Cash">Cash</option>
+              <option value="Debit Card">Debit Card</option>
+              <option value="Credit Card">Credit Card</option>
+              <option value="Net Banking">Net Banking</option>
+              <option value="Wallet">Wallet</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label" for="edit-tx-notes">Notes</label>
+            <input type="text" id="edit-tx-notes" class="form-control" placeholder="Optional note or tag">
+          </div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
+          <button type="button" class="btn btn-secondary" onclick="document.getElementById('edit-tx-modal').classList.remove('active')">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Core JS -->
+  <script src="js/storage.js"></script>
+  <script src="js/budget.js"></script>
+  <script src="js/ocr.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

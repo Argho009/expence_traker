@@ -1,0 +1,43 @@
+=========================================
+MONEY EXPENSE TRACKER - DEPLOYMENT NOTES
+=========================================
+
+1. UI & COLOR PALETTE (CSS/STYLE.CSS)
+-----------------------------------------
+- Updated the root CSS variables with a modern, premium color palette.
+- Light Mode features deep violet/indigo (#7c3aed) with glassmorphic cards and subtle drop shadows.
+- Dark Mode is a "Sleek Slate" aesthetic (Slate 950 backgrounds, Slate 900 semi-transparent cards).
+- Custom semantic colors introduced (rose-red for expenses, emerald for income).
+
+2. OFFLINE-FIRST ARCHITECTURE
+-----------------------------------------
+- The app uses an offline-first mechanism to stay blazing fast.
+- js/storage.js reads and writes locally to localStorage for instant UI updates.
+- Background sync silently pushes local changes to the Cloudflare D1 SQL database.
+- initLoginPage in js/app.js was updated to make async API calls for login/signup with loading spinners.
+
+3. CLOUDFLARE BACKEND & D1 DATABASE
+-----------------------------------------
+- schema.sql: Defines the SQL tables (users, transactions) for the D1 database.
+- wrangler.toml: Binds the D1 database to the Cloudflare project.
+- functions/api/auth.js: Securely registers and authenticates users via the database.
+- functions/api/sync.js: Saves transactions and budget updates to the cloud database.
+
+4. HOW TO DEPLOY TO MONEY.PAGES.DEV
+-----------------------------------------
+Run these commands in the terminal (make sure you have Node.js installed):
+
+Step A: Create the Database
+npx wrangler d1 create money-db
+
+Step B: Update Configuration
+Copy the `database_id` from the output of Step A and paste it into `wrangler.toml` where it says "replace-with-your-d1-id".
+
+Step C: Create the Tables in Production
+npx wrangler d1 execute money-db --remote --file=./schema.sql
+
+Step D: Deploy the Application
+npx wrangler pages deploy . --project-name money
+
+*Note: The name "money" might already be taken by someone else on Cloudflare (money.pages.dev). If it fails, try a unique name like:
+npx wrangler pages deploy . --project-name my-money-tracker
