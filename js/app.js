@@ -1488,8 +1488,11 @@ const App = {
         if (!amount || amount <= 0) { skipped++; continue; }
 
         const txDate = row['date'] ? this._parseDateFromCSV(row['date']) : today;
-        const txTime = row['time'] ? row['time'] : this.getCurrentTimeValue();
+        const rawTime = row['time'] ? row['time'].trim() : this.getCurrentTimeValue();
+        // Convert 12h AM/PM format (e.g. "12:37 PM") to 24h "HH:MM" for timestamp
+        const txTime = this._parseTimeTo24h(rawTime);
         const txTimestamp = row['timestamp'] ? parseFloat(row['timestamp']) : (new Date(`${txDate}T${txTime}:00`).getTime() || Date.now());
+
 
         let rawName = row['name/source'] || row['transactiondetails'] || row['to/from'] || row['name'] || row['source'] || 'Imported Transaction';
         
@@ -1627,5 +1630,20 @@ const App = {
       return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
     }
     return this.getTodayDateValue();
+  },
+
+  // Converts "12:37 PM" or "1:05 AM" → "12:37" or "01:05" (24h HH:MM)
+  _parseTimeTo24h(str) {
+    if (!str) return '00:00';
+    str = str.trim();
+    if (/^\d{1,2}:\d{2}$/.test(str)) return str.length === 4 ? '0' + str : str;
+    const match = str.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!match) return str.slice(0, 5);
+    let h = parseInt(match[1]);
+    const m = match[2];
+    const suffix = match[3].toUpperCase();
+    if (suffix === 'AM' && h === 12) h = 0;
+    if (suffix === 'PM' && h !== 12) h += 12;
+    return `${String(h).padStart(2, '0')}:${m}`;
   }
 };
