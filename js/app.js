@@ -849,9 +849,18 @@ const App = {
         if (filterPayment) filterPayment.value = 'all';
         if (filterDateFrom) filterDateFrom.value = '';
         if (filterDateTo) filterDateTo.value = '';
+        const archiveMonth = document.getElementById('filter-archive-month');
+        const archiveYear = document.getElementById('filter-archive-year');
+        if (archiveMonth) archiveMonth.value = 'all';
+        if (archiveYear) archiveYear.value = 'all';
         updateFilter();
       });
     }
+
+    const archiveMonth = document.getElementById('filter-archive-month');
+    const archiveYear = document.getElementById('filter-archive-year');
+    if (archiveMonth) archiveMonth.addEventListener('change', updateFilter);
+    if (archiveYear) archiveYear.addEventListener('change', updateFilter);
   },
 
   getFilteredTransactions() {
@@ -898,6 +907,17 @@ const App = {
         if (filterTime === 'month') return tDate >= new Date(now.getFullYear(), now.getMonth(), 1).getTime();
         return true;
       });
+    }
+
+    // Archive specific filter for Past Months
+    const filterArchiveMonth = document.getElementById('filter-archive-month')?.value;
+    const filterArchiveYear = document.getElementById('filter-archive-year')?.value;
+    
+    if (filterArchiveMonth && filterArchiveMonth !== 'all') {
+      list = list.filter(t => t.date && t.date.split('-')[1] === filterArchiveMonth);
+    }
+    if (filterArchiveYear && filterArchiveYear !== 'all') {
+      list = list.filter(t => t.date && t.date.split('-')[0] === filterArchiveYear);
     }
 
     // #4 Column sort
@@ -1114,6 +1134,14 @@ const App = {
     document.getElementById('edit-tx-time').value = t.time || '';
     document.getElementById('edit-tx-payment').value = t.paymentMode || 'UPI';
     document.getElementById('edit-tx-notes').value = t.notes || '';
+
+    const isPastMonths = this.currentPage === 'past_months';
+    document.getElementById('edit-tx-type').disabled = isPastMonths;
+    document.getElementById('edit-tx-name').disabled = isPastMonths;
+    document.getElementById('edit-tx-amount').disabled = isPastMonths;
+    document.getElementById('edit-tx-date').disabled = isPastMonths;
+    document.getElementById('edit-tx-time').disabled = isPastMonths;
+    document.getElementById('edit-tx-payment').disabled = isPastMonths;
 
     const typeLabel = document.getElementById('edit-tx-type-label');
     if (typeLabel) typeLabel.textContent = t.type === 'income' ? 'Income' : 'Expense';
