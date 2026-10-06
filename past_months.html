@@ -14,22 +14,58 @@
 
   <style>
     .upload-zone {
-      border: 2px dashed var(--primary-color);
-      border-radius: 12px;
-      padding: 3rem;
+      position: relative;
+      border: 2px dashed rgba(124, 58, 237, 0.4);
+      border-radius: 16px;
+      padding: 3.5rem 2rem;
       text-align: center;
-      background: rgba(124, 58, 237, 0.05);
-      transition: all 0.3s ease;
+      background: linear-gradient(145deg, rgba(124, 58, 237, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
+      overflow: hidden;
+    }
+    .upload-zone::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(139, 92, 246, 0));
+      opacity: 0;
+      transition: opacity 0.4s ease;
     }
     .upload-zone:hover {
-      background: rgba(124, 58, 237, 0.1);
-      transform: translateY(-2px);
+      border-color: var(--primary-color);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(124, 58, 237, 0.15);
+    }
+    .upload-zone:hover::before {
+      opacity: 1;
     }
     .upload-zone i {
-      font-size: 3rem;
-      color: var(--primary-color);
-      margin-bottom: 1rem;
+      font-size: 3.5rem;
+      background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1.5rem;
+      display: inline-block;
+      transition: transform 0.4s ease;
+    }
+    .upload-zone:hover i {
+      transform: scale(1.1);
+    }
+    .upload-title-text {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+      position: relative;
+    }
+    .upload-subtitle-text {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      max-width: 400px;
+      margin: 0 auto;
+      position: relative;
     }
   </style>
 </head>
@@ -113,47 +149,45 @@
           </div>
           
           <div class="upload-zone" id="upload-zone-ui" onclick="document.getElementById('import-csv-file').click();">
-             <i class="fas fa-file-csv" id="upload-icon"></i>
-             <h3 id="upload-title">Select Multiple CSV Files</h3>
-             <p id="upload-subtitle" style="color:var(--text-muted); margin-top:0.5rem;">Click here or drag & drop past month statement CSVs.<br/>You can select multiple files at once.</p>
+             <i class="fas fa-cloud-upload-alt" id="upload-icon"></i>
+             <h3 id="upload-title" class="upload-title-text">Drag & Drop Bank Statements</h3>
+             <p id="upload-subtitle" class="upload-subtitle-text">Securely upload your past month CSV statements here.<br/>You can select multiple files at once for bulk import.</p>
              <!-- Hidden inputs required by app.js -->
              <button id="import-csv-btn" style="display:none;"></button>
              <input type="file" id="import-csv-file" accept=".csv,text/csv" style="display:none;" multiple>
           </div>
         </div>
 
-        <!-- Filter & Search Toolbar (Simplified for Past Months) -->
-        <div class="glass-card filter-toolbar" style="flex-direction:row; gap:1rem; align-items:center;">
-          <div class="filter-group" style="width:100%; display: flex; align-items: center; gap: 1rem;">
-            <label style="font-weight: 500;">Archive Filter:</label>
-            <select id="filter-archive-month" class="form-select" style="width: 150px;">
-              <option value="all">All Months</option>
-              <option value="01">January</option>
-              <option value="02">February</option>
-              <option value="03">March</option>
-              <option value="04">April</option>
-              <option value="05">May</option>
-              <option value="06">June</option>
-              <option value="07">July</option>
-              <option value="08">August</option>
-              <option value="09">September</option>
-              <option value="10">October</option>
-              <option value="11">November</option>
-              <option value="12">December</option>
-            </select>
-            <select id="filter-archive-year" class="form-select" style="width: 120px;">
-              <option value="all">All Years</option>
-              <option value="2026">2026</option>
-              <option value="2025">2025</option>
-              <option value="2024">2024</option>
-              <option value="2023">2023</option>
-            </select>
+        <!-- Transactions Archive Table -->
+        <div class="glass-card">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <h2 style="font-size: 1.25rem; margin: 0;"><i class="fas fa-archive" style="color:var(--primary-color)"></i> Archive Records</h2>
+            <div class="filter-group" style="display: flex; align-items: center; gap: 0.75rem;">
+              <select id="filter-archive-month" class="form-select" style="width: 140px; padding: 0.4rem 0.8rem;">
+                <option value="all">All Months</option>
+                <option value="01">January</option>
+                <option value="02">February</option>
+                <option value="03">March</option>
+                <option value="04">April</option>
+                <option value="05">May</option>
+                <option value="06">June</option>
+                <option value="07">July</option>
+                <option value="08">August</option>
+                <option value="09">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+              <select id="filter-archive-year" class="form-select" style="width: 100px; padding: 0.4rem 0.8rem;">
+                <option value="all">All Years</option>
+                <option value="2026">2026</option>
+                <option value="2025">2025</option>
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+              </select>
+            </div>
           </div>
-        </div>
-
-        <!-- Transactions History Table -->
-        <div class="glass-card" style="padding: 1.5rem;">
-          <div class="table-container">
+          <div class="table-container" style="padding: 0 1.5rem 1.5rem 1.5rem;">
             <table class="data-table">
               <thead>
                 <tr>
