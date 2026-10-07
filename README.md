@@ -29,6 +29,8 @@ A modern, responsive web application designed for college students to track dail
 4. **Analytics & PDF/CSV Reports (`reports.html`)**:
    - Key metrics: Most expensive category, total food expenses (Mess/Food + Cafeteria), current month spending, daily average spending, and income-to-expense ratio.
    - Interactive Chart.js category breakdown doughnut chart with hover labels and percentages.
+   - Interactive Chart.js Yearly Expense Trend stacked bar chart showing category usage per month.
+   - High-DPI optimized chart rendering for crystal clear visuals on Retina screens.
    - PDF export via `jsPDF` library with formatted tables and student summary headers.
    - CSV spreadsheet download capabilities.
 
