@@ -121,8 +121,7 @@ const BudgetEngine = {
     return (parseFloat(monthlyBudget) || 0) / daysInMonth;
   },
 
-  // Last 6 months spending totals for trend chart
-  getMonthlyTrend(transactions = [], numMonths = 6) {
+  getMonthlyTrend(transactions = [], numMonths = 12) {
     const now = new Date();
     const result = [];
 
@@ -132,12 +131,20 @@ const BudgetEngine = {
       const mo = d.getMonth();
       const monthName = d.toLocaleString('default', { month: 'short', year: '2-digit' });
 
-      const spent = transactions
+      let spent = 0;
+      const categories = {};
+      
+      transactions
         .filter(t => {
           const td = new Date(t.date || t.timestamp);
           return t.type === 'expense' && td.getFullYear() === yr && td.getMonth() === mo;
         })
-        .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+        .forEach(t => {
+          const amt = parseFloat(t.amount) || 0;
+          spent += amt;
+          const cat = t.category || 'Miscellaneous';
+          categories[cat] = (categories[cat] || 0) + amt;
+        });
 
       const income = transactions
         .filter(t => {
@@ -146,7 +153,7 @@ const BudgetEngine = {
         })
         .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
 
-      result.push({ label: monthName, spent, income, year: yr, month: mo });
+      result.push({ label: monthName, spent, income, categories, year: yr, month: mo });
     }
     return result;
   },

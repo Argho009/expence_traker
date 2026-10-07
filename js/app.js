@@ -1180,7 +1180,7 @@ const App = {
     ChartManager.renderExpenseChart('category-chart-canvas', analytics.categoryBreakdown, isDark);
 
     // #6 Monthly Trend Bar Chart
-    const trendData = BudgetEngine.getMonthlyTrend(transactions, 6);
+    const trendData = BudgetEngine.getMonthlyTrend(transactions, 12);
     ChartManager.renderTrendChart('trend-chart-canvas', trendData, isDark);
 
     // Export buttons

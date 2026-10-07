@@ -78,6 +78,7 @@ const ChartManager = {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
         plugins: {
           legend: {
             position: 'bottom',
@@ -114,7 +115,7 @@ const ChartManager = {
     });
   },
 
-  // Renders a 6-month income vs expense bar chart
+  // Renders a monthly expense trend stacked bar chart (categories)
   renderTrendChart(canvasId, trendData, isDarkMode = false) {
     const canvasElement = document.getElementById(canvasId);
     if (!canvasElement || typeof Chart === 'undefined') return;
@@ -126,33 +127,36 @@ const ChartManager = {
     const textColor = isDarkMode ? '#94a3b8' : '#64748b';
     const gridColor = isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
 
+    // Extract all unique categories present in the trend data
+    const allCategories = new Set();
+    trendData.forEach(d => {
+      if (d.categories) {
+        Object.keys(d.categories).forEach(c => allCategories.add(c));
+      }
+    });
+
+    const datasets = Array.from(allCategories).map(cat => {
+      return {
+        label: cat,
+        data: trendData.map(d => d.categories && d.categories[cat] ? d.categories[cat] : 0),
+        backgroundColor: this.categoryColors[cat] || "#94a3b8",
+        borderRadius: 0,
+        borderSkipped: false,
+        barPercentage: 0.65
+      };
+    });
+
     const ctx = canvasElement.getContext('2d');
     this.trendChartInstance = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: trendData.map(d => d.label),
-        datasets: [
-          {
-            label: 'Expenses',
-            data: trendData.map(d => d.spent),
-            backgroundColor: 'rgba(239,68,68,0.75)',
-            borderRadius: 6,
-            borderSkipped: false,
-            barPercentage: 0.55
-          },
-          {
-            label: 'Income',
-            data: trendData.map(d => d.income),
-            backgroundColor: 'rgba(16,185,129,0.75)',
-            borderRadius: 6,
-            borderSkipped: false,
-            barPercentage: 0.55
-          }
-        ]
+        datasets: datasets
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
         plugins: {
           legend: {
             position: 'top',
@@ -172,16 +176,18 @@ const ChartManager = {
             borderWidth: 1,
             padding: 12,
             callbacks: {
-              label: ctx => ` ₹${ctx.parsed.y.toLocaleString('en-IN')}`
+              label: ctx => ` ${ctx.dataset.label}: ₹${ctx.parsed.y.toLocaleString('en-IN')}`
             }
           }
         },
         scales: {
           x: {
+            stacked: true,
             grid: { display: false },
             ticks: { color: textColor, font: { size: 11 } }
           },
           y: {
+            stacked: true,
             beginAtZero: true,
             grid: { color: gridColor },
             ticks: {
